@@ -6,6 +6,8 @@ public class PlayerController : MonoBehaviour
     [Header("Движение")]
     [SerializeField] private float moveSpeed = 7f;
     [SerializeField] private float jumpForce = 7f;
+    [Tooltip("Если включено, W/A/S/D двигают персонажа относительно направления камеры, а не осей мира.")]
+    [SerializeField] private bool cameraRelative = true;
 
     [Header("Проверка земли")]
     [SerializeField] private Transform groundCheck;
@@ -13,6 +15,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
 
     private Rigidbody rb;
+    private Camera cam;
     private Vector3 moveInput;
     private bool isGrounded;
 
@@ -26,7 +29,7 @@ public class PlayerController : MonoBehaviour
     {
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
-        moveInput = new Vector3(x, 0f, z).normalized;
+        moveInput = GetMoveDirection(x, z);
 
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
@@ -47,6 +50,31 @@ public class PlayerController : MonoBehaviour
         velocity.x = moveInput.x * moveSpeed;
         velocity.z = moveInput.z * moveSpeed;
         rb.linearVelocity = velocity;
+    }
+
+    private Vector3 GetMoveDirection(float x, float z)
+    {
+        if (!cameraRelative)
+        {
+            return new Vector3(x, 0f, z).normalized;
+        }
+
+        if (cam == null) cam = Camera.main;
+        if (cam == null)
+        {
+            return new Vector3(x, 0f, z).normalized;
+        }
+
+        // Берём направления камеры, спроецированные на горизонтальную плоскость
+        Vector3 forward = cam.transform.forward;
+        forward.y = 0f;
+        forward.Normalize();
+
+        Vector3 right = cam.transform.right;
+        right.y = 0f;
+        right.Normalize();
+
+        return (right * x + forward * z).normalized;
     }
 
     private void Jump()
