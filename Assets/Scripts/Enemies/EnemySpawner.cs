@@ -18,8 +18,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void Start()
     {
-        PlayerController playerController = FindAnyObjectByType<PlayerController>();
-        if (playerController != null) player = playerController.transform;
+        if (PlayerController.Instance != null) player = PlayerController.Instance.transform;
 
         if (enemyPrefab == null)
         {

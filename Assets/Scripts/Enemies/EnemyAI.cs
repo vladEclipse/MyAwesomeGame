@@ -76,11 +76,11 @@ public class EnemyAI : MonoBehaviour
     {
         homePosition = transform.position;
 
-        PlayerController player = FindAnyObjectByType<PlayerController>();
+        PlayerController player = PlayerController.Instance;
         if (player != null)
         {
             target = player.transform;
-            targetHealth = player.GetComponent<Health>();
+            targetHealth = player.PlayerHealth;
         }
 
         if (!agent.isOnNavMesh)

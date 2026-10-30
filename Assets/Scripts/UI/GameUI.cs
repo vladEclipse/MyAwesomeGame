@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,7 +11,7 @@ public class GameUI : MonoBehaviour
     [Header("Полоска здоровья")]
     [SerializeField] private RectTransform healthFill;
     [SerializeField] private Image healthFillImage;
-    [SerializeField] private Text healthText;
+    [SerializeField] private TMP_Text healthText;
     [SerializeField] private Color lowHealthColor = new Color(0.85f, 0.15f, 0.15f);
     [SerializeField] private Color fullHealthColor = new Color(0.25f, 0.8f, 0.3f);
     [Tooltip("Скорость плавного изменения полоски (доля шкалы в секунду)")]
@@ -41,10 +42,9 @@ public class GameUI : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        if (playerHealth == null)
+        if (playerHealth == null && PlayerController.Instance != null)
         {
-            PlayerController player = FindAnyObjectByType<PlayerController>();
-            if (player != null) playerHealth = player.GetComponent<Health>();
+            playerHealth = PlayerController.Instance.PlayerHealth;
         }
 
         SetActive(gameOverPanel, false);
