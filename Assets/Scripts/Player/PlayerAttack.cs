@@ -18,6 +18,9 @@ public class PlayerAttack : MonoBehaviour
     private Health ownHealth;
     private float nextAttackTime;
 
+    /// Вызывается в момент удара (для анимации)
+    public event System.Action Attacked;
+
     private void Awake()
     {
         ownHealth = GetComponent<Health>();
@@ -38,6 +41,7 @@ public class PlayerAttack : MonoBehaviour
     private void Attack()
     {
         nextAttackTime = Time.time + cooldown;
+        Attacked?.Invoke();
 
         int count = Physics.OverlapSphereNonAlloc(
             transform.position,

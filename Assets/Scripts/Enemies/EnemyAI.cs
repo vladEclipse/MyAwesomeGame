@@ -54,6 +54,9 @@ public class EnemyAI : MonoBehaviour
 
     public State CurrentState => state;
 
+    /// Вызывается в момент удара по игроку (для анимации)
+    public event System.Action Attacked;
+
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -228,6 +231,7 @@ public class EnemyAI : MonoBehaviour
         if (Time.time < nextAttackTime) return;
 
         nextAttackTime = Time.time + attackCooldown;
+        Attacked?.Invoke();
         targetHealth.TakeDamage(attackDamage);
     }
 
@@ -283,13 +287,19 @@ public class EnemyAI : MonoBehaviour
 
     private IEnumerator DeathRoutine()
     {
+        // Сначала доигрывается анимация смерти, и только в последние полсекунды моб уменьшается
+        const float shrinkTime = 0.5f;
+        float lingerTime = Mathf.Max(0f, destroyDelay - shrinkTime);
+        if (lingerTime > 0f) yield return new WaitForSeconds(lingerTime);
+
         Vector3 startScale = transform.localScale;
+        float duration = Mathf.Min(shrinkTime, destroyDelay);
         float elapsed = 0f;
 
-        while (elapsed < destroyDelay)
+        while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(startScale, Vector3.zero, elapsed / destroyDelay);
+            transform.localScale = Vector3.Lerp(startScale, Vector3.zero, elapsed / duration);
             yield return null;
         }
 

@@ -21,6 +21,10 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Время от начала одного рывка до начала следующего (сек).")]
     [SerializeField] private float dashCooldown = 0.8f;
 
+    [Header("Поворот")]
+    [Tooltip("Скорость поворота модели в сторону движения (градусов в секунду).")]
+    [SerializeField] private float turnSpeed = 720f;
+
     private Rigidbody rb;
     private Camera cam;
     private Vector3 moveInput;
@@ -32,6 +36,7 @@ public class PlayerController : MonoBehaviour
     private float nextDashTime;
 
     public Health PlayerHealth { get; private set; }
+    public bool IsDashing => isDashing;
 
     private void Awake()
     {
@@ -57,6 +62,7 @@ public class PlayerController : MonoBehaviour
         dashSpeed = Mathf.Max(0f, dashSpeed);
         dashDuration = Mathf.Max(0.01f, dashDuration);
         dashCooldown = Mathf.Max(dashDuration, dashCooldown);
+        turnSpeed = Mathf.Max(0f, turnSpeed);
     }
 
     private void Update()
@@ -92,6 +98,14 @@ public class PlayerController : MonoBehaviour
         velocity.x = horizontal.x;
         velocity.z = horizontal.z;
         rb.linearVelocity = velocity;
+
+        // Персонаж смотрит туда, куда движется (во время рывка - по направлению рывка)
+        Vector3 facing = isDashing ? dashDirection : moveInput;
+        if (facing.sqrMagnitude > 0.01f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(facing, Vector3.up);
+            rb.rotation = Quaternion.RotateTowards(rb.rotation, targetRotation, turnSpeed * Time.fixedDeltaTime);
+        }
     }
 
     private void StartDash()
