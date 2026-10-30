@@ -23,8 +23,7 @@ public class ActorAnimator : MonoBehaviour
     private NavMeshAgent agent;
     private Rigidbody body;
     private PlayerController player;
-    private PlayerAttack playerAttack;
-    private EnemyAI enemy;
+    private IAttacker attacker;
 
     private void Awake()
     {
@@ -33,8 +32,7 @@ public class ActorAnimator : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         body = GetComponent<Rigidbody>();
         player = GetComponent<PlayerController>();
-        playerAttack = GetComponent<PlayerAttack>();
-        enemy = GetComponent<EnemyAI>();
+        attacker = GetComponent<IAttacker>();
 
         if (animator == null)
         {
@@ -51,8 +49,7 @@ public class ActorAnimator : MonoBehaviour
             health.Died += OnDied;
         }
 
-        if (playerAttack != null) playerAttack.Attacked += OnAttack;
-        if (enemy != null) enemy.Attacked += OnAttack;
+        if (attacker != null) attacker.Attacked += OnAttack;
     }
 
     private void OnDisable()
@@ -63,8 +60,7 @@ public class ActorAnimator : MonoBehaviour
             health.Died -= OnDied;
         }
 
-        if (playerAttack != null) playerAttack.Attacked -= OnAttack;
-        if (enemy != null) enemy.Attacked -= OnAttack;
+        if (attacker != null) attacker.Attacked -= OnAttack;
     }
 
     private void Update()

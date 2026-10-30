@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 545225577398961134}
   - component: {fileID: 4268008664329201702}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube_Dirt_Single
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -105,6 +105,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 15829e0e48018434b967478c72cf3213, type: 3}
       propertyPath: m_Name
       value: Cube_Dirt_Single
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 15829e0e48018434b967478c72cf3213, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

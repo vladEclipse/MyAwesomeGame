@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameUI : MonoBehaviour
@@ -17,11 +16,6 @@ public class GameUI : MonoBehaviour
     [Tooltip("Скорость плавного изменения полоски (доля шкалы в секунду)")]
     [SerializeField] private float barSpeed = 1.2f;
 
-    [Header("Эффект урона")]
-    [SerializeField] private Image damageFlash;
-    [SerializeField] private float flashStrength = 0.35f;
-    [SerializeField] private float flashFadeSpeed = 0.8f;
-
     [Header("Панели")]
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject pausePanel;
@@ -34,7 +28,6 @@ public class GameUI : MonoBehaviour
 
     private float shownValue;
     private float targetValue;
-    private float flashAlpha;
     private bool isPaused;
     private bool isGameOver;
 
@@ -50,15 +43,14 @@ public class GameUI : MonoBehaviour
         SetActive(gameOverPanel, false);
         SetActive(pausePanel, false);
 
-        Bind(gameOverRestartButton, Restart);
-        Bind(pauseRestartButton, Restart);
+        Bind(gameOverRestartButton, GameFlow.Restart);
+        Bind(pauseRestartButton, GameFlow.Restart);
         Bind(resumeButton, Resume);
-        Bind(quitButton, Quit);
+        Bind(quitButton, GameFlow.Quit);
 
         if (playerHealth != null)
         {
             playerHealth.Changed += OnHealthChanged;
-            playerHealth.Damaged += OnDamaged;
             playerHealth.Died += OnPlayerDied;
 
             targetValue = shownValue = playerHealth.Normalized;
@@ -70,7 +62,6 @@ public class GameUI : MonoBehaviour
         }
 
         ApplyBar();
-        ApplyFlash();
     }
 
     private void OnDestroy()
@@ -78,35 +69,24 @@ public class GameUI : MonoBehaviour
         if (playerHealth != null)
         {
             playerHealth.Changed -= OnHealthChanged;
-            playerHealth.Damaged -= OnDamaged;
             playerHealth.Died -= OnPlayerDied;
         }
-
-        // На случай выхода из паузы через перезагрузку сцены
-        Time.timeScale = 1f;
     }
 
     private void Update()
     {
-        if (!isGameOver && Input.GetKeyDown(KeyCode.Escape))
+        bool won = CoinCounter.Instance != null && CoinCounter.Instance.Won;
+        if (!isGameOver && !won && Input.GetKeyDown(KeyCode.Escape))
         {
             if (isPaused) Resume();
             else Pause();
         }
 
         // Unscaled-время, чтобы интерфейс жил и во время паузы
-        float dt = Time.unscaledDeltaTime;
-
         if (!Mathf.Approximately(shownValue, targetValue))
         {
-            shownValue = Mathf.MoveTowards(shownValue, targetValue, dt * barSpeed);
+            shownValue = Mathf.MoveTowards(shownValue, targetValue, Time.unscaledDeltaTime * barSpeed);
             ApplyBar();
-        }
-
-        if (flashAlpha > 0f)
-        {
-            flashAlpha = Mathf.MoveTowards(flashAlpha, 0f, dt * flashFadeSpeed);
-            ApplyFlash();
         }
     }
 
@@ -118,30 +98,12 @@ public class GameUI : MonoBehaviour
         UpdateText(current, max);
     }
 
-    private void OnDamaged(float amount)
-    {
-        flashAlpha = flashStrength;
-        ApplyFlash();
-    }
-
     private void OnPlayerDied(Health _)
     {
         isGameOver = true;
         SetActive(gameOverPanel, true);
 
-        // Управление игроком отключаем, остановив его на месте
-        PlayerController controller = playerHealth.GetComponent<PlayerController>();
-        if (controller != null) controller.enabled = false;
-
-        PlayerAttack attack = playerHealth.GetComponent<PlayerAttack>();
-        if (attack != null) attack.enabled = false;
-
-        Rigidbody body = playerHealth.GetComponent<Rigidbody>();
-        if (body != null)
-        {
-            Vector3 velocity = body.linearVelocity;
-            body.linearVelocity = new Vector3(0f, velocity.y, 0f);
-        }
+        if (playerHealth.TryGetComponent(out PlayerController controller)) controller.SetControlEnabled(false);
     }
 
     private void ApplyBar()
@@ -155,15 +117,6 @@ public class GameUI : MonoBehaviour
         {
             healthFillImage.color = Color.Lerp(lowHealthColor, fullHealthColor, shownValue);
         }
-    }
-
-    private void ApplyFlash()
-    {
-        if (damageFlash == null) return;
-
-        Color c = damageFlash.color;
-        c.a = flashAlpha;
-        damageFlash.color = c;
     }
 
     private void UpdateText(float current, float max)
@@ -188,21 +141,6 @@ public class GameUI : MonoBehaviour
         isPaused = false;
         Time.timeScale = 1f;
         SetActive(pausePanel, false);
-    }
-
-    private void Restart()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
-    private void Quit()
-    {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
     }
 
     // Вспомогательное

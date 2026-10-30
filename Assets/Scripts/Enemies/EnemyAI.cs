@@ -4,8 +4,7 @@ using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(Health))]
-
-public class EnemyAI : MonoBehaviour
+public class EnemyAI : MonoBehaviour, IAttacker
 {
     public enum State
     {
@@ -250,14 +249,8 @@ public class EnemyAI : MonoBehaviour
         float distance = direction.magnitude;
         if (distance < 0.01f) return true;
 
-        if (!Physics.Raycast(origin, direction / distance, out RaycastHit hit, distance, sightMask, QueryTriggerInteraction.Ignore))
-        {
-            return true;
-        }
-
-        // Видимость не блокируют сам игрок и другие мобы
-        return hit.collider.GetComponentInParent<PlayerController>() != null
-            || hit.collider.GetComponentInParent<EnemyAI>() != null;
+        // Видимость блокирует только мир: игрок и мобы на слое Actors исключены
+        return !Physics.Raycast(origin, direction / distance, distance, sightMask & Layers.World, QueryTriggerInteraction.Ignore);
     }
 
     // События здоровья

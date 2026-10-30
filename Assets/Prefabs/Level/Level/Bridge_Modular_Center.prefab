@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3171225589398309648}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Bridge_Modular_Center
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -83,6 +83,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: c04ae0473da836d4ebf34f8190aff57b, type: 3}
       propertyPath: m_Name
       value: Bridge_Modular_Center
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: c04ae0473da836d4ebf34f8190aff57b, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

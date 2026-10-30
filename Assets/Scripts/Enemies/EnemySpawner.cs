@@ -4,9 +4,10 @@ using UnityEngine.AI;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [SerializeField] private GameObject enemyPrefab;
-    [Tooltip("Дополнительные виды мобов. Каждый раз выбирается случайный из них и основного префаба")]
-    [SerializeField] private GameObject[] extraEnemyPrefabs;
+    [Tooltip("Виды мобов. Каждый раз выбирается случайный")]
+    [SerializeField] private GameObject[] enemyPrefabs;
+    [Tooltip("Монетка, которая выпадает из убитого моба")]
+    [SerializeField] private Coin coinPrefab;
     [SerializeField] private int count = 4;
     [SerializeField] private float spawnRadius = 5.5f;
     [Tooltip("Мобы не появляются ближе этого расстояния от игрока")]
@@ -22,9 +23,9 @@ public class EnemySpawner : MonoBehaviour
     {
         if (PlayerController.Instance != null) player = PlayerController.Instance.transform;
 
-        if (enemyPrefab == null)
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
         {
-            Debug.LogWarning("EnemySpawner: не назначен префаб моба", this);
+            Debug.LogWarning("EnemySpawner: не назначены префабы мобов", this);
             return;
         }
 
@@ -43,27 +44,15 @@ public class EnemySpawner : MonoBehaviour
         }
 
         // Агент ставится на NavMesh с учётом baseOffset, поэтому создаём чуть выше поверхности
-        GameObject prefab = PickPrefab();
-        float baseOffset = 0f;
-        NavMeshAgent prefabAgent = prefab.GetComponent<NavMeshAgent>();
-        if (prefabAgent != null) baseOffset = prefabAgent.baseOffset;
+        GameObject prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
+        if (prefab == null) return;
+
+        float baseOffset = prefab.TryGetComponent(out NavMeshAgent prefabAgent) ? prefabAgent.baseOffset : 0f;
 
         GameObject enemy = Instantiate(prefab, point + Vector3.up * baseOffset, Quaternion.identity);
 
         Health enemyHealth = enemy.GetComponent<Health>();
         if (enemyHealth != null) enemyHealth.Died += OnEnemyDied;
-    }
-
-    private GameObject PickPrefab()
-    {
-        int extra = extraEnemyPrefabs != null ? extraEnemyPrefabs.Length : 0;
-        if (extra == 0) return enemyPrefab;
-
-        int index = Random.Range(0, extra + 1);
-        if (index == 0) return enemyPrefab;
-
-        GameObject chosen = extraEnemyPrefabs[index - 1];
-        return chosen != null ? chosen : enemyPrefab;
     }
 
     private bool TryGetSpawnPoint(out Vector3 result)
@@ -93,6 +82,10 @@ public class EnemySpawner : MonoBehaviour
     private void OnEnemyDied(Health dead)
     {
         dead.Died -= OnEnemyDied;
+
+        // Из каждого убитого моба выпадает монетка
+        Coin.Spawn(coinPrefab, dead.transform.position);
+
         if (respawn) StartCoroutine(RespawnAfterDelay());
     }
 

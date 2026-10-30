@@ -5,7 +5,7 @@ using UnityEngine;
 /// Простая атака игрока: удар по области вокруг персонажа.
 /// ЛКМ или F. Направление не нужно, поэтому работает при любом ракурсе камеры.
 /// </summary>
-public class PlayerAttack : MonoBehaviour
+public class PlayerAttack : MonoBehaviour, IAttacker
 {
     [SerializeField] private float damage = 25f;
     [SerializeField] private float radius = 2.5f;
