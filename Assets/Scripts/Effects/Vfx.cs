@@ -36,6 +36,7 @@ public static class Vfx
 
     public static GameObject Spawn(VfxId id, Vector3 position, Quaternion rotation, float lifetime = 2.5f)
     {
+        // Префаб грузится из Resources один раз и дальше берётся из кэша
         if (!Prefabs.TryGetValue(id, out GameObject prefab) || prefab == null)
         {
             prefab = Resources.Load<GameObject>(Folder + "FX_" + id);
@@ -49,7 +50,7 @@ public static class Vfx
         }
 
         GameObject instance = Object.Instantiate(prefab, position, rotation);
-        Object.Destroy(instance, lifetime);
+        Object.Destroy(instance, lifetime); // отложенное удаление: эффект исчезнет сам
         return instance;
     }
 }

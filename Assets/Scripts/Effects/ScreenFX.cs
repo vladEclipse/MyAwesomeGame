@@ -65,6 +65,7 @@ public class ScreenFX : MonoBehaviour
 
         if (pulse > 0f) pulse = Mathf.MoveTowards(pulse, 0f, Time.unscaledDeltaTime * pulseFadeSpeed);
 
+        // Итоговая опасность 0..1: большее из вспышки и малого здоровья. Она задаёт и силу, и цвет виньетки
         float danger = Mathf.Max(pulse, lowHealth);
         vignette.intensity.value = Mathf.Lerp(baseIntensity, maxIntensity, danger);
         vignette.color.value = Color.Lerp(Color.black, damageColor, danger);

@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Полоска здоровья над головой моба. Всегда повёрнута к камере и скрыта, пока здоровье полное.
+/// </summary>
 public class WorldHealthBar : MonoBehaviour
 {
     [SerializeField] private Health health;
@@ -37,7 +40,7 @@ public class WorldHealthBar : MonoBehaviour
     private void LateUpdate()
     {
         if (cam == null) cam = Camera.main;
-        if (cam != null) transform.rotation = cam.transform.rotation;
+        if (cam != null) transform.rotation = cam.transform.rotation; // поворачиваемся так же, как камера (billboard)
     }
 
     private void OnChanged(float current, float max)

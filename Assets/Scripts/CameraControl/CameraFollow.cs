@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Камера плавно следует за игроком с постоянным смещением и умеет трястись (CameraFollow.Shake).
+/// </summary>
 public class CameraFollow : MonoBehaviour
 {
     public static CameraFollow Instance { get; private set; }
@@ -43,6 +46,7 @@ public class CameraFollow : MonoBehaviour
         basePosition = transform.position;
     }
 
+    // LateUpdate идёт после всех Update: камера двигается, когда игрок уже переместился
     private void LateUpdate()
     {
         if (target == null) return;
@@ -54,9 +58,9 @@ public class CameraFollow : MonoBehaviour
         Vector3 shake = Vector3.zero;
         if (shakeTime > 0f)
         {
-            shakeTime -= Time.unscaledDeltaTime;
+            shakeTime -= Time.unscaledDeltaTime; // unscaled - тряска доигрывает и на паузе
             float strength = Mathf.Clamp01(shakeTime / shakeDuration);
-            shake = Random.insideUnitSphere * (shakeMagnitude * strength * strength);
+            shake = Random.insideUnitSphere * (shakeMagnitude * strength * strength); // квадрат - быстрое затухание
         }
 
         transform.position = basePosition + shake;
@@ -73,6 +77,7 @@ public class CameraFollow : MonoBehaviour
 
     private void AddShake(float magnitude, float duration)
     {
+        // Текущая сила тряски больше новой - новую игнорируем
         if (shakeTime > 0f && magnitude < shakeMagnitude * Mathf.Clamp01(shakeTime / shakeDuration)) return;
 
         shakeMagnitude = magnitude;

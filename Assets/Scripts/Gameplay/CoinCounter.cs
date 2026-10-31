@@ -19,8 +19,9 @@ public class CoinCounter : MonoBehaviour
     public int Count { get; private set; }
     public bool Won { get; private set; }
 
-    private float punch;
+    private float punch; // сила «подпрыгивания» счётчика при новой монете, затухает до 0
 
+    // Сброс статики при запуске: при быстром входе в Play Mode она не обнуляется сама
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {

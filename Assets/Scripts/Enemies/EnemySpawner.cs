@@ -2,6 +2,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// Создаёт мобов вокруг себя. Когда моб умирает - роняет монетку и через несколько секунд создаёт нового.
+/// </summary>
 public class EnemySpawner : MonoBehaviour
 {
     [Tooltip("Виды мобов. Каждый раз выбирается случайный")]
@@ -43,18 +46,20 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        // Агент ставится на NavMesh с учётом baseOffset, поэтому создаём чуть выше поверхности
         GameObject prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
         if (prefab == null) return;
 
+        // Агент ставится на NavMesh с учётом baseOffset, поэтому создаём чуть выше поверхности
         float baseOffset = prefab.TryGetComponent(out NavMeshAgent prefabAgent) ? prefabAgent.baseOffset : 0f;
 
         GameObject enemy = Instantiate(prefab, point + Vector3.up * baseOffset, Quaternion.identity);
 
+        // Узнаём о смерти моба через событие, чтобы уронить монетку и запустить респавн
         Health enemyHealth = enemy.GetComponent<Health>();
         if (enemyHealth != null) enemyHealth.Died += OnEnemyDied;
     }
 
+    // Случайная точка: в радиусе спавнера, на NavMesh и не слишком близко к игроку
     private bool TryGetSpawnPoint(out Vector3 result)
     {
         for (int i = 0; i < 20; i++)

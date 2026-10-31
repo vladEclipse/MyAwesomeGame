@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class Layers
 {
-    private static int actorsMask = -1;
+    private static int actorsMask = -1; // -1 - ещё не вычислено
 
     /// <summary>Маска слоя Actors (игрок и мобы).</summary>
     public static int Actors
@@ -15,7 +15,7 @@ public static class Layers
             if (actorsMask < 0)
             {
                 int layer = LayerMask.NameToLayer("Actors");
-                actorsMask = layer >= 0 ? 1 << layer : 0;
+                actorsMask = layer >= 0 ? 1 << layer : 0; // маска - число, где каждый бит означает один слой
                 if (layer < 0) Debug.LogError("Layers: нет слоя Actors (Project Settings > Tags and Layers)");
             }
             return actorsMask;

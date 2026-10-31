@@ -2,6 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Интерфейс игрока: полоска здоровья, экран проигрыша и пауза (Esc).
+/// </summary>
 public class GameUI : MonoBehaviour
 {
     [Header("Игрок")]
@@ -82,6 +85,7 @@ public class GameUI : MonoBehaviour
             else Pause();
         }
 
+        // Полоска не прыгает, а плавно движется к новому значению.
         // Unscaled-время, чтобы интерфейс жил и во время паузы
         if (!Mathf.Approximately(shownValue, targetValue))
         {
@@ -108,6 +112,7 @@ public class GameUI : MonoBehaviour
 
     private void ApplyBar()
     {
+        // Ширина заливки задаётся правым якорем: 0 - пусто, 1 - полная ширина
         if (healthFill != null)
         {
             healthFill.anchorMax = new Vector2(Mathf.Clamp01(shownValue), 1f);
@@ -132,7 +137,7 @@ public class GameUI : MonoBehaviour
     private void Pause()
     {
         isPaused = true;
-        Time.timeScale = 0f;
+        Time.timeScale = 0f; // останавливает физику, Time.deltaTime и всё, что от них зависит
         SetActive(pausePanel, true);
     }
 

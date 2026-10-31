@@ -13,12 +13,13 @@ public class PlayerAttack : MonoBehaviour, IAttacker
     [SerializeField] private LayerMask hitMask = ~0;
 
     private readonly HashSet<Health> hitTargets = new HashSet<Health>();
+    // Готовый массив для OverlapSphereNonAlloc: не создаём новый при каждом ударе
     private readonly Collider[] buffer = new Collider[32];
 
     private Health ownHealth;
     private float nextAttackTime;
 
-    /// Вызывается в момент удара (для анимации)
+    /// Вызывается в момент удара (для анимации и звука)
     public event System.Action Attacked;
 
     private void Awake()
@@ -43,6 +44,7 @@ public class PlayerAttack : MonoBehaviour, IAttacker
         nextAttackTime = Time.time + cooldown;
         Attacked?.Invoke();
 
+        // Все коллайдеры в сфере вокруг игрока
         int count = Physics.OverlapSphereNonAlloc(
             transform.position,
             radius,
@@ -54,10 +56,11 @@ public class PlayerAttack : MonoBehaviour, IAttacker
         hitTargets.Clear();
         for (int i = 0; i < count; i++)
         {
+            // Коллайдер может быть на дочернем объекте, поэтому Health ищем вверх по иерархии
             Health target = buffer[i].GetComponentInParent<Health>();
             if (target == null || target == ownHealth || target.IsDead) continue;
 
-            // У моба может быть несколько коллайдеров — бьём каждого только один раз.
+            // У моба может быть несколько коллайдеров — бьём каждого только один раз
             if (hitTargets.Add(target))
             {
                 target.TakeDamage(damage);

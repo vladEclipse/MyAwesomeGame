@@ -1,5 +1,9 @@
 using UnityEngine;
 
+/// <summary>
+/// Управление игроком: ходьба относительно камеры, рывок, поворот модели,
+/// движение по склонам и подъём на невысокие уступы.
+/// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
 public class PlayerController : MonoBehaviour
 {
@@ -34,9 +38,10 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private Collider body;
     private Camera cam;
+    // Готовый массив для NonAlloc-лучей: не создаём новый на каждый луч
     private readonly RaycastHit[] hitBuffer = new RaycastHit[16];
     private Vector3 moveInput;
-    private Vector3 lastMoveDirection;
+    private Vector3 lastMoveDirection; // для рывка с места
     private bool dashRequested;
     private float dashEndTime;
     private float nextDashTime;
@@ -54,7 +59,7 @@ public class PlayerController : MonoBehaviour
 
         rb = GetComponent<Rigidbody>();
         body = GetComponent<Collider>();
-        rb.freezeRotation = true;
+        rb.freezeRotation = true; // поворачиваем персонажа только сами, физика его не опрокидывает
         PlayerHealth = GetComponent<Health>();
     }
 
@@ -76,13 +81,16 @@ public class PlayerController : MonoBehaviour
         moveInput = GetMoveDirection(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         if (moveInput.sqrMagnitude > 0.01f) lastMoveDirection = moveInput;
 
-        // Нажатие запоминаем здесь, а выполняем в FixedUpdate вместе со всей физикой.
+        // Нажатие запоминаем здесь, а выполняем в FixedUpdate вместе со всей физикой:
+        // GetKeyDown верен только один кадр, и FixedUpdate мог бы его пропустить.
         // На паузе (timeScale = 0) рывок не запоминаем, чтобы он не сработал после снятия паузы.
         if (Time.timeScale > 0f && Input.GetKeyDown(dashKey)) dashRequested = true;
     }
 
+    // Физика: вызывается с фиксированным шагом, здесь меняем скорость Rigidbody
     private void FixedUpdate()
     {
+        // Рывок во время отката или другого рывка просто игнорируется
         if (dashRequested)
         {
             dashRequested = false;
@@ -91,6 +99,7 @@ public class PlayerController : MonoBehaviour
 
         if (IsDashing && Time.time >= dashEndTime) IsDashing = false;
 
+        // Во время рывка направление фиксировано, WASD на него не влияет
         Vector3 horizontal = IsDashing ? DashDirection * dashSpeed : moveInput * moveSpeed;
         bool moving = horizontal.sqrMagnitude > 0.0001f;
 
@@ -127,7 +136,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Поверхность под ногами: мобы и сам игрок землёй не считаются
+    // Поверхность под ногами: сфера вниз от низа персонажа
     private bool FindGround(Bounds b, float radius, out Vector3 normal)
     {
         Vector3 origin = new Vector3(b.center.x, b.min.y + radius + 0.05f, b.center.z);
@@ -150,8 +159,9 @@ public class PlayerController : MonoBehaviour
         if (Vector3.Angle(wall.normal, Vector3.up) <= maxSlopeAngle) return;
 
         Vector3 high = new Vector3(b.center.x, feet + stepHeight + 0.05f, b.center.z);
-        if (CastWorld(high, direction, reach, 0f, out _)) return;
+        if (CastWorld(high, direction, reach, 0f, out _)) return; // стена выше шага - не залезть
 
+        // Находим верх уступа и поднимаем персонажа на него
         Vector3 ahead = high + direction * reach;
         if (!CastWorld(ahead, Vector3.down, stepHeight + 0.1f, 0f, out RaycastHit top)) return;
 
@@ -169,6 +179,7 @@ public class PlayerController : MonoBehaviour
         best = default;
         bool found = false;
 
+        // NonAlloc не сортирует попадания, поэтому ближайшее ищем сами
         for (int i = 0; i < count; i++)
         {
             RaycastHit hit = hitBuffer[i];
@@ -217,6 +228,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        // normalized: по диагонали персонаж не бегает быстрее
         return (right * x + forward * z).normalized;
     }
 }

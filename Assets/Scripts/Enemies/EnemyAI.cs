@@ -2,6 +2,10 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// ИИ моба - конечный автомат с состояниями Patrol, Chase, Attack, Dead.
+/// Путь по уровню строит NavMeshAgent, скрипт только задаёт ему цель.
+/// </summary>
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(Health))]
 public class EnemyAI : MonoBehaviour, IAttacker
@@ -45,15 +49,16 @@ public class EnemyAI : MonoBehaviour, IAttacker
     private Transform target;
     private Health targetHealth;
 
-    private Vector3 homePosition;
+    private Vector3 homePosition; // центр зоны патруля
     private State state;
     private bool idling;
+    // Таймеры хранятся как моменты времени: сравниваем с Time.time, а не уменьшаем каждый кадр
     private float idleUntil;
     private float nextAttackTime;
 
     public State CurrentState => state;
 
-    /// Вызывается в момент удара по игроку (для анимации)
+    /// Вызывается в момент удара по игроку (для анимации и звука)
     public event System.Action Attacked;
 
     private void Awake()
@@ -85,6 +90,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
             targetHealth = player.PlayerHealth;
         }
 
+        // Вне NavMesh моб двигаться не сможет - выключаем скрипт, чтобы не было ошибок каждый кадр
         if (!agent.isOnNavMesh)
         {
             Debug.LogWarning($"{name}: моб не стоит на NavMesh. Проверьте, что NavMesh построен и моб создан на нём", this);
@@ -107,6 +113,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
             return;
         }
 
+        // Расстояние считаем по земле, без учёта высоты
         Vector3 toTarget = target.position - transform.position;
         toTarget.y = 0f;
         float distance = toTarget.magnitude;
@@ -114,6 +121,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
         switch (state)
         {
             case State.Patrol:
+                // Сначала дешёвая проверка расстояния, потом луч видимости
                 if (distance <= detectionRange && HasLineOfSight())
                 {
                     EnterChase();
@@ -140,7 +148,8 @@ public class EnemyAI : MonoBehaviour, IAttacker
                 break;
 
             case State.Attack:
-                // Небольшой запас, чтобы моб не дёргался на границе дистанции атаки
+                // Гистерезис: входим в атаку на 1.8 м, выходим только на 2.25 м,
+                // иначе на границе моб дёргался бы между погоней и атакой
                 if (distance > attackRange * 1.25f)
                 {
                     EnterChase();
@@ -154,7 +163,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
         }
     }
 
-    // Переходы между состояниями
+    // Переходы между состояниями: при входе один раз настраиваем агента
 
     private void EnterPatrol()
     {
@@ -173,6 +182,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
         idling = false;
         agent.isStopped = false;
         agent.speed = chaseSpeed;
+        // Останавливаемся чуть ближе дистанции удара, чтобы не врезаться в игрока
         agent.stoppingDistance = attackRange * 0.8f;
     }
 
@@ -180,10 +190,11 @@ public class EnemyAI : MonoBehaviour, IAttacker
     {
         state = State.Attack;
         agent.isStopped = true;
+        // Max - задержка первого удара не должна сокращать уже идущий откат
         nextAttackTime = Mathf.Max(nextAttackTime, Time.time + firstAttackDelay);
     }
 
-    // Патруль
+    // Патруль: идти к случайной точке -> постоять -> следующая точка
 
     private void TickPatrol()
     {
@@ -193,7 +204,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
             return;
         }
 
-        if (agent.pathPending) return;
+        if (agent.pathPending) return; // путь ещё считается
 
         if (agent.remainingDistance <= agent.stoppingDistance + 0.15f)
         {
@@ -211,6 +222,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
             Vector2 offset = Random.insideUnitCircle * patrolRadius;
             Vector3 candidate = homePosition + new Vector3(offset.x, 0f, offset.y);
 
+            // Ближайшая проходимая точка NavMesh (на случай, если случайная попала в воду или камень)
             if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 3f, NavMesh.AllAreas))
             {
                 agent.SetDestination(hit.position);
@@ -234,6 +246,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
         targetHealth.TakeDamage(attackDamage);
     }
 
+    // Остановленный агент сам не поворачивается - поворачиваем вручную, плавно
     private void FaceTarget(Vector3 flatDirection)
     {
         if (flatDirection.sqrMagnitude < 0.0001f) return;
@@ -270,6 +283,7 @@ public class EnemyAI : MonoBehaviour, IAttacker
 
         if (agent.enabled) agent.enabled = false;
 
+        // Мёртвое тело не мешает проходить и не получает удары
         foreach (Collider c in GetComponentsInChildren<Collider>())
         {
             c.enabled = false;
@@ -293,12 +307,13 @@ public class EnemyAI : MonoBehaviour, IAttacker
         {
             elapsed += Time.deltaTime;
             transform.localScale = Vector3.Lerp(startScale, Vector3.zero, elapsed / duration);
-            yield return null;
+            yield return null; // следующий шаг - в следующем кадре
         }
 
         Destroy(gameObject);
     }
 
+    // Сферы радиусов в окне Scene (только в редакторе)
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;

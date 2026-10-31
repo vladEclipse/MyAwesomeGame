@@ -8,6 +8,7 @@ public class UiClickSound : MonoBehaviour
 {
     private void Start()
     {
+        // true - включая скрытые панели (пауза, проигрыш, победа)
         foreach (Button button in GetComponentsInChildren<Button>(true))
         {
             button.onClick.AddListener(PlayClick);

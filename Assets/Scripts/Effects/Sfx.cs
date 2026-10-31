@@ -30,6 +30,7 @@ public static class Sfx
     private static readonly Dictionary<SfxId, AudioClip> Clips = new Dictionary<SfxId, AudioClip>();
     private static SfxRunner runner;
 
+    // Сброс статики при запуске: при быстром входе в Play Mode она не обнуляется сама
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
@@ -37,6 +38,7 @@ public static class Sfx
         runner = null;
     }
 
+    // Вызывается сам один раз после загрузки первой сцены
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void StartMusic()
     {
@@ -49,10 +51,12 @@ public static class Sfx
         AudioClip clip = GetClip(id);
         if (clip == null) return;
 
+        // Случайный pitch, чтобы одинаковые звуки подряд не звучали как копия
         GetRunner().PlayClip(clip, volume, 1f + Random.Range(-pitchVariation, pitchVariation));
     }
 
-    /// <summary>Звук в точке мира: чем дальше от игрока, тем тише.</summary>
+    /// <summary>Звук в точке мира: чем дальше от игрока, тем тише.
+    /// Расстояние считается до игрока, а не до камеры: камера висит далеко над ним.</summary>
     public static void PlayAt(SfxId id, Vector3 position, float volume = 1f, float pitchVariation = 0.08f)
     {
         float attenuation = 1f;
@@ -62,14 +66,15 @@ public static class Sfx
         {
             float distance = Vector3.Distance(position, player.transform.position);
             attenuation = Mathf.Clamp01(1f - distance / HearingDistance);
-            attenuation *= attenuation;
+            attenuation *= attenuation; // квадратичное затухание
         }
 
-        if (attenuation < 0.02f) return;
+        if (attenuation < 0.02f) return; // неслышный звук не занимает голос
 
         Play(id, volume * attenuation, pitchVariation);
     }
 
+    // Клип грузится с диска при первом использовании и дальше берётся из кэша
     private static AudioClip GetClip(SfxId id)
     {
         if (Clips.TryGetValue(id, out AudioClip cached) && cached != null) return cached;
@@ -85,6 +90,8 @@ public static class Sfx
         return clip;
     }
 
+    // Проигрыватель создаётся сам при первом звуке и переживает перезагрузку сцены,
+    // поэтому музыка не обрывается при рестарте
     private static SfxRunner GetRunner()
     {
         if (runner != null) return runner;
@@ -96,7 +103,8 @@ public static class Sfx
     }
 }
 
-/// <summary>Держит несколько AudioSource для звуков и один для музыки.</summary>
+/// <summary>Держит несколько AudioSource для звуков (пул голосов) и один для музыки.
+/// Несколько источников нужны из-за pitch: он задаётся на источник, и у каждого звука должен быть свой.</summary>
 public class SfxRunner : MonoBehaviour
 {
     private const int VoiceCount = 12;
@@ -126,7 +134,7 @@ public class SfxRunner : MonoBehaviour
 
         AudioSource source = child.AddComponent<AudioSource>();
         source.playOnAwake = false;
-        source.spatialBlend = 0f;
+        source.spatialBlend = 0f; // 2D-звук, затухание считаем сами в PlayAt
         return source;
     }
 

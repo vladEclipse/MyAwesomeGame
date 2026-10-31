@@ -3,6 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Универсальная система здоровья. Вешается и на игрока, и на мобов.
+/// Только считает здоровье и сообщает о событиях - эффекты, ИИ и интерфейс на них подписываются.
 /// </summary>
 public class Health : MonoBehaviour
 {
@@ -40,12 +41,14 @@ public class Health : MonoBehaviour
         EnsureInitialized();
     }
 
+    // Вызывается в редакторе при изменении значений: не даём ввести бессмысленные числа
     private void OnValidate()
     {
         maxHealth = Mathf.Max(1f, maxHealth);
         invulnerabilityTime = Mathf.Max(0f, invulnerabilityTime);
     }
 
+    // На случай, если другой скрипт спросит здоровье раньше, чем выполнится Awake
     private void EnsureInitialized()
     {
         if (initialized) return;
@@ -83,6 +86,7 @@ public class Health : MonoBehaviour
         float before = current;
         current = Mathf.Min(maxHealth, current + amount);
 
+        // Событие только если здоровье реально изменилось
         if (!Mathf.Approximately(before, current))
         {
             Changed?.Invoke(current, maxHealth);

@@ -2,8 +2,8 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Короткая вспышка цвета при получении урона
-/// Использует MaterialPropertyBlock
+/// Короткая вспышка цвета модели при получении урона.
+/// Использует MaterialPropertyBlock: цвет меняется только у этого объекта, копия материала не создаётся.
 /// </summary>
 [RequireComponent(typeof(Health))]
 public class DamageFlash : MonoBehaviour
@@ -11,6 +11,7 @@ public class DamageFlash : MonoBehaviour
     [SerializeField] private Color flashColor = Color.white;
     [SerializeField] private float duration = 0.12f;
 
+    // _BaseColor - основной цвет шейдера URP Lit. Обращаться по числовому ID быстрее, чем по строке
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
     private Health health;
@@ -34,13 +35,14 @@ public class DamageFlash : MonoBehaviour
     {
         health.Damaged -= OnDamaged;
         routine = null;
-        Clear();
+        Clear(); // если выключили посреди вспышки, модель не должна остаться белой
     }
 
     private void OnDamaged(float amount)
     {
         if (!isActiveAndEnabled) return;
 
+        // Повторный удар перезапускает вспышку
         if (routine != null) StopCoroutine(routine);
         routine = StartCoroutine(Flash());
     }
@@ -62,6 +64,7 @@ public class DamageFlash : MonoBehaviour
         }
     }
 
+    // null снимает блок целиком - объект возвращается к обычному материалу
     private void Clear()
     {
         if (renderers == null) return;

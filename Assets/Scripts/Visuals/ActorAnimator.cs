@@ -9,6 +9,7 @@ using UnityEngine.AI;
 [DisallowMultipleComponent]
 public class ActorAnimator : MonoBehaviour
 {
+    // Имена параметров заранее превращаем в числа: так Animator работает быстрее, чем со строками
     private static readonly int SpeedId = Animator.StringToHash("Speed");
     private static readonly int AttackId = Animator.StringToHash("Attack");
     private static readonly int HitId = Animator.StringToHash("Hit");
@@ -67,6 +68,7 @@ public class ActorAnimator : MonoBehaviour
     {
         float speed = 0f;
 
+        // Скорость берём у агента (моб) или у Rigidbody (игрок)
         if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             speed = agent.velocity.magnitude;

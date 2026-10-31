@@ -15567,11 +15567,6 @@ MonoBehaviour:
   - {fileID: 100000, guid: 535f338ffbf705f4e989965fb6e0cd6f, type: 3}
   - {fileID: 100000, guid: 73e65f2eeb7fb8b42aa6f9e76c37e533, type: 3}
   - {fileID: 100000, guid: 6df578f1833dfa94e8b00181f49726c9, type: 3}
-  enemyPrefab: {fileID: 100000, guid: c3e8a1b47d2f4096b5a0e9d1f6c82b34, type: 3}
-  extraEnemyPrefabs:
-  - {fileID: 100000, guid: 535f338ffbf705f4e989965fb6e0cd6f, type: 3}
-  - {fileID: 100000, guid: 73e65f2eeb7fb8b42aa6f9e76c37e533, type: 3}
-  - {fileID: 100000, guid: 6df578f1833dfa94e8b00181f49726c9, type: 3}
   coinPrefab: {fileID: 938536453141668464, guid: 28afea83e0362904f87709e5f8949038, type: 3}
   count: 4
   spawnRadius: 30
@@ -15776,9 +15771,6 @@ MonoBehaviour:
   lowHealthColor: {r: 0.85, g: 0.15, b: 0.15, a: 1}
   fullHealthColor: {r: 0.25, g: 0.8, b: 0.3, a: 1}
   barSpeed: 1.2
-  damageFlash: {fileID: 0}
-  flashStrength: 0.35
-  flashFadeSpeed: 0.8
   gameOverPanel: {fileID: 2000001070}
   pausePanel: {fileID: 2000001110}
   gameOverRestartButton: {fileID: 2000001094}

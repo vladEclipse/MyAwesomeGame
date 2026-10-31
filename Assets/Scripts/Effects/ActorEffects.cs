@@ -49,6 +49,7 @@ public class ActorEffects : MonoBehaviour
         }
     }
 
+    // Скрипт один для игрока и мобов: по тому, какие компоненты нашлись, понятно, на ком он висит
     private void Awake()
     {
         health = GetComponent<Health>();
@@ -119,6 +120,7 @@ public class ActorEffects : MonoBehaviour
         if (speed > 2f && Time.time >= nextStepTime)
         {
             Sfx.Play(SfxId.Step, stepVolume, 0.2f);
+            // Чем быстрее движение, тем чаще шаги: скорость 2..7 превращается в интервал 0.5..0.32 с
             nextStepTime = Time.time + Mathf.Lerp(maxStepInterval, minStepInterval, Mathf.InverseLerp(2f, 7f, speed));
         }
     }
@@ -159,6 +161,7 @@ public class ActorEffects : MonoBehaviour
         Sfx.PlayAt(SfxId.EnemyDeath, transform.position);
 
         PlayerController p = PlayerController.Instance;
+        // Трясём камеру, только если моб погиб рядом с игроком
         if (p != null && Vector3.Distance(p.transform.position, transform.position) < 12f)
         {
             CameraFollow.Shake(enemyDeathShake, 0.15f);
